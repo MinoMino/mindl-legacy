@@ -12,7 +12,7 @@ As of right now, it only works with eBookJapan.
 * Download PhantomJS from [here](http://phantomjs.org/download.html) and put the executable in your PATH. If you're on
 Linux, remember to make it executable as well.
 * Run the following command to install mindl:
-`python3.5 -m pip install git+https://github.com/MinoMino/mindl.git#egg=mindl`
+`python -m pip install git+https://github.com/MinoMino/mindl.git#egg=mindl`
 * You should now be able to run mindl from the command line. See below for details about usage.
 
 **NOTE**: If you're not on a virtual environment or something similar, you might need to run `pip` as root.
@@ -48,7 +48,7 @@ mino$ python -m mindl -o email=some@mail.com -o password=mypassword123 https://b
 (06:20 INFO) URL is being handled by plugin: eBookJapan v0.1
 (06:20 INFO) Starting download...
 (06:21 INFO) Creating non-existent directory 'downloads\おやすみプンプン 第3巻'.
-(06:21 INFO) Done! A total of 19 were downloaded.
+(06:21 INFO) Done! A total of 206 were downloaded.
 (06:21 INFO) Finalizing...
 ```
 
