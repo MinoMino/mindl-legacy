@@ -23,7 +23,7 @@ import sys
 import re
 
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities as DC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoAlertPresentException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
@@ -59,7 +59,17 @@ class ebookjapan(BasePlugin):
         self.d.add_cookie({"name": "tachiyomi_user_policy", "value": "on", "domain": ".ebookjapan.jp", "path": "/"})
         self.d.set_window_size(1120, 550)
         # Generic waiter.
-        self.wait = WebDriverWait(self.d, 120)
+        self.wait = WebDriverWait(self.d, 60)
+
+    def _rewrite_alert(self):
+        # Apparently PhantomJS doesn't directly deal with alerts yet, so we rewrite
+        # the alert function to put the message on a variable. Thanks, StackOverflow.
+        js = """
+        window.alert = function(message) {
+        lastAlert = message;
+        }
+        """
+        self.d.execute_script(js)
 
     @staticmethod
     def can_handle(url):
@@ -110,12 +120,21 @@ class ebookjapan(BasePlugin):
 
         # We use a window size that makes the reader display one page at a time.
         self.d.set_window_size(700, 500)
+        self._rewrite_alert()
 
         try:
             self.logger.debug("Waiting for reader to load...")
             self.wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@id='controller']")))
         except TimeoutException as e:
-            self.logger.critical("Failed to find the controller. If it's a reader link, make sure it hasn't expired.")
+            self.logger.critical("Failed to find the controller. Checking for an alert...")
+            # Check if we have an alert.
+            alert_text = self.d.execute_script("return lastAlert")
+            if alert_text:
+                self.logger.critical("The reader threw the following error:\n" + alert_text)
+                exit(1)
+            else:
+                self.logger.critical("No alert was present. Unknown error. Check the exception_state.png"
+                    "image for a screenshot of the page when it failed.")
             raise e
 
         self.logger.debug("Checking if page 0 is being displayed...")
@@ -142,8 +161,10 @@ class ebookjapan(BasePlugin):
 
         # Before we start ripping, we get the book name, and the volume number if it has one.
         self.book_name = (self.d.find_element_by_xpath("//div[@class='bookProperty']/span[@class='name']")
-            .get_attribute('innerHTML').strip().replace("/", "／").replace("\\", "＼"))
-        res = re.match(r".+\((\d+)\)$", self.book_name)
+            .get_attribute('innerHTML').strip().replace("/", "／").replace("\\", "＼")).replace("（", "(").replace("）", ")")
+        # For stuff like time limited free books, the title might have 特別無料版 prepended, so remove it.
+        self.book_name = self.book_name.split("<br>")[-1]
+        res = re.match(r".+\((\d+)\)$", self.book_name) #downloads/特別無料版<br>きみはペット　（1）)'
         if res: # Is it a series?
             self.book_volume = int(res.group(1))
             self.book_name = self.book_name[:-(2+len(res.group(1)))]
