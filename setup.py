@@ -27,7 +27,7 @@ setup(name="mindl",
       description="A plugin-based downloading tool.",
       author="Mino",
       author_email="mino@minomino.org",
-      packages=["mindl"],
+      packages=["mindl", "mindl.plugins"],
       install_requires=["requests", "selenium"],
       classifiers = [
               "Programming Language :: Python",
