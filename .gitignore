@@ -1,2 +1,5 @@
 *.sublime-project
 *.sublime-workspace
+downloads/
+exception_state.png
+__pycache__/
