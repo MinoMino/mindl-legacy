@@ -59,7 +59,7 @@ class ebookjapan(BasePlugin):
         self.d.add_cookie({"name": "tachiyomi_user_policy", "value": "on", "domain": ".ebookjapan.jp", "path": "/"})
         self.d.set_window_size(1120, 550)
         # Generic waiter.
-        self.wait = WebDriverWait(self.d, 60)
+        self.wait = WebDriverWait(self.d, 120)
 
     @staticmethod
     def can_handle(url):
@@ -154,7 +154,7 @@ class ebookjapan(BasePlugin):
             # The canvas has borders that could have an alpha of 0, which is we don't just use (0, 0).
             return self.d.execute_script("return arguments[0].getContext(\"2d\").getImageData(10, 10, 10, 10).data[3] == 255;", page)
 
-        canvas_wait = WebDriverWait(self.d, 30)
+        canvas_wait = WebDriverWait(self.d, 120)
         i = 0
         self.logger.info("Starting the ripping process...")
 
