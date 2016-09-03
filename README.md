@@ -9,10 +9,10 @@ As of right now, it only works with eBookJapan.
 
 ## Installation
 * Install Python 3.5+
-* Download PhantomJS from [here](http://phantomjs.org/download.html) and put the executable in your PATH
-environment variable or just put it in the same directory as the one you're executing commands from.
+* Download PhantomJS from [here](http://phantomjs.org/download.html) and put the executable in your PATH. If you're on
+Linux, remember to make it executable as well.
 * Run the following command to install mindl:
-`python3.5 -m pip install -e git+https://github.com/MinoMino/mindl.git#egg=mindl`
+`python3.5 -m pip install git+https://github.com/MinoMino/mindl.git#egg=mindl`
 * You should now be able to run mindl from the command line. See below for details about usage.
 
 **NOTE**: If you're not on a virtual environment or something similar, you might need to run `pip` as root.
