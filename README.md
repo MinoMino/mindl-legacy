@@ -44,13 +44,16 @@ To run it, use Python's `-m` argument to run modules: `python -m mindl [...]`
 
 ## Example
 ```
-mino$ python -m mindl -o email=some@mail.com -o password=mypassword123 https://br.ebookjapan.jp/br/reader/viewer/view.html?sessionid=[...]
+mino$ python -m mindl -o email=some@mail.com -o password=mypassword123 "https://br.ebookjapan.jp/br/reader/viewer/view.html?sessionid=[...]&keydata=[...]&shopID=eBookJapan"
 (06:20 INFO) URL is being handled by plugin: eBookJapan v0.1
 (06:20 INFO) Starting download...
 (06:21 INFO) Creating non-existent directory 'downloads\おやすみプンプン 第3巻'.
 (06:21 INFO) Done! A total of 206 were downloaded.
 (06:21 INFO) Finalizing...
 ```
+
+**Make sure you use double quotes around the URL(s), or the console will interpret the ampersands as multiple console commands
+instead of part of the URL(s).**
 
 In the above example I've put it my credentials using the `-o` argument, but if you leave one or both out,
 you will instead be prompted for the missing options at launch.
