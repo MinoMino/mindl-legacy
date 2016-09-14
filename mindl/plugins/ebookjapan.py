@@ -23,7 +23,7 @@ import sys
 import re
 
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities as DC
-from selenium.common.exceptions import TimeoutException, NoAlertPresentException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
