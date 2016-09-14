@@ -147,7 +147,7 @@ class BasePlugin():
             logger.setLevel(logging.DEBUG)
 
             # Console
-            console_fmt = logging.Formatter("(%(asctime)s %(levelname)s) [%(name)s] %(message)s", "%H:%M:%S")
+            console_fmt = logging.Formatter("(%(asctime)s %(levelname)s) [%(name)s] %(message)s", "%H:%M")
             console_handler = logging.StreamHandler()
             console_handler.setLevel(logging.DEBUG if self._debug_logger else logging.INFO)
             console_handler.setFormatter(console_fmt)
