@@ -20,7 +20,7 @@ import argparse
 import logging
 import sys
 
-from mindl import DownloadManager, PluginManager
+from mindl import DownloadManager, PluginManager, download_directory
 
 from collections import namedtuple
 
@@ -92,10 +92,17 @@ def configure_parser():
                         "two or more plugins can handle the same URL")
     parser.add_argument("-f", "--file", help="the path to a text file containing URLs to be processed, separated by lines",
                         metavar="PATH", type=argparse.FileType("r", encoding="UTF-8"), dest="url", action=UrlListFileParseAction)
+    parser.add_argument("-D", "--directory", help="the directory in which the downloads will go to ('downloads' by default)",
+                        default="downloads")
+    
     return parser
 
 def main(args):
     logger = init_logger(debug=args.verbose)
+
+    # Set the base download directory. Defaults to "downloads".
+    DownloadManager.base_directory = args.directory
+    
     if not args.url:
         logger.info("Nothing to do, as no URLs were passed. Use the -h argument to see the usage.")
         exit()

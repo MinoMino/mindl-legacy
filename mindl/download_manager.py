@@ -20,10 +20,9 @@ import logging
 import os.path
 import os
 
-# Just the default download path. Exported by the mindl module.
-DOWNLOAD_DIRECTORY = "downloads"
-
 class DownloadManager():
+    base_directory = "downloads"
+    
     def __init__(self, plugin, report_count=10):
         self.logger = logging.getLogger("mindl")
         self._plugin = plugin
@@ -44,7 +43,7 @@ class DownloadManager():
                 filename, data = dl
 
                 # We allow the plugin to change directories in between files.
-                path = os.path.join(DOWNLOAD_DIRECTORY, self._plugin.directory())
+                path = os.path.join(self.base_directory, self._plugin.directory())
 
                 if not os.path.isdir(path):
                     self.logger.info("Creating non-existent directory '{}'.".format(path))
