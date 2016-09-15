@@ -106,8 +106,9 @@ def main(args):
     if not args.url:
         logger.info("Nothing to do, as no URLs were passed. Use the -h argument to see the usage.")
         exit()
+    
+    pm = PluginManager()
     for url in args.url:
-        pm = PluginManager()
         eligible = pm.find_handlers(url)
 
         # If --plugin is used, only allow the plugin with that particular name.
