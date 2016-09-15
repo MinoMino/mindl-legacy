@@ -25,6 +25,7 @@ REQUIRED_MAGIC = "@"
 class BasePlugin():
     name = "N/A"
     options = tuple()
+    _logger = None
     _debug_logger = False
 
     def __iter__(self):
@@ -141,19 +142,24 @@ class BasePlugin():
 
     @property
     def logger(self):
-        if not hasattr(self, "_logger"):
+        if self._logger is None:
             logger = logging.getLogger(self.name)
             logger.propagate = False
-            logger.setLevel(logging.DEBUG)
 
-            # Console
-            console_fmt = logging.Formatter("(%(asctime)s %(levelname)s) [%(name)s] %(message)s", "%H:%M")
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(logging.DEBUG if self._debug_logger else logging.INFO)
-            console_handler.setFormatter(console_fmt)
-            logger.addHandler(console_handler)
+            # If it's already been configured by another instance, adding another handler
+            # will just make it print stuff multiple times, so we skip it.
+            if not logger.hasHandlers():
+                logger.setLevel(logging.DEBUG)
+
+                # Console
+                console_fmt = logging.Formatter("(%(asctime)s %(levelname)s) [%(name)s] %(message)s", "%H:%M")
+                console_handler = logging.StreamHandler()
+                console_handler.setLevel(logging.DEBUG if self._debug_logger else logging.INFO)
+                console_handler.setFormatter(console_fmt)
+                logger.addHandler(console_handler)
 
             self._logger = logger
+            self.__class__._logger = logger
         
         return self._logger
 
