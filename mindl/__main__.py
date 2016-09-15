@@ -26,6 +26,30 @@ from collections import namedtuple
 
 ArgumentOption = namedtuple("ArgumentOption", ["plugin", "key", "value"])
 
+class UrlListParseAction(argparse.Action):
+    """
+    Custom action to avoid having the --file argument overwrite regular URLs, or vice versa.
+    Instead, this action will simply merge regular URLs with file URLs.
+    """
+    def __call__(self, parser, namespace, urls, option_string=None):
+        dest = getattr(namespace, self.dest)
+        if dest is urls:
+            return
+        
+        for url in urls:
+            dest.append(url)
+
+class UrlListFileParseAction(argparse.Action):
+    """Custom action to append all the URLs in a file into its destination list."""
+    def __call__(self, parser, namespace, file, option_string=None):
+        dest = getattr(namespace, self.dest)
+        if dest is None:
+            dest = []
+            setattr(namespace, self.dest, dest)
+        
+        for line in [l.strip() for l in file.readlines() if l.strip()]:
+            dest.append(line)
+
 def init_logger(debug=False):
     logger = logging.getLogger("mindl")
     logger.propagate = False
@@ -58,7 +82,7 @@ def configure_parser():
         return ArgumentOption(plugin, key, value)
     
     parser = argparse.ArgumentParser(description='A plugin-based downloader.', prog="mindl")
-    parser.add_argument("url", metavar="URL", nargs="+", help="the URL to download from")
+    parser.add_argument("url", metavar="URL", nargs="*", help="the URL to download from", default=[], action=UrlListParseAction)
     parser.add_argument("-o", "--option", dest="options", metavar="KEY=VALUE", type=key_value_parse, default=[], action="append",
                         help="a key-value pair to be passed to the plugin to define its options")
     parser.add_argument("-v", "--verbose", action="store_true", help="makes the logger output debugging strings")
@@ -66,11 +90,16 @@ def configure_parser():
                         help="makes the plugin use default values for options if it can instead of prompting")
     parser.add_argument("-p", "--plugin", help="explicitly set which plugin should handle the URL in the case where"
                         "two or more plugins can handle the same URL")
+    parser.add_argument("-f", "--file", help="the path to a text file containing URLs to be processed, separated by lines",
+                        metavar="PATH", type=argparse.FileType("r", encoding="UTF-8"), dest="url", action=UrlListFileParseAction)
     return parser
 
 def main(args):
+    logger = init_logger(debug=args.verbose)
+    if not args.url:
+        logger.info("Nothing to do, as no URLs were passed. Use the -h argument to see the usage.")
+        exit()
     for url in args.url:
-        logger = init_logger(debug=args.verbose)
         pm = PluginManager()
         eligible = pm.find_handlers(url)
 
