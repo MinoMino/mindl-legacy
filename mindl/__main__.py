@@ -109,6 +109,10 @@ def main(args):
     
     pm = PluginManager()
     for url in args.url:
+        # If we're dealing with multiple URLs, log which one is being dealt with.
+        if len(args.url) > 1:
+            logger.info("Processing URL: " + url)
+
         eligible = pm.find_handlers(url)
 
         # If --plugin is used, only allow the plugin with that particular name.
