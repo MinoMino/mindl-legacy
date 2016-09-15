@@ -51,6 +51,9 @@ class DownloadManager():
 
                 with open(os.path.join(path, filename), "wb") as f:
                     f.write(data)
+                
+                # If the report_count is 0, don't report at all.
+                if self._reports:
                     self._count += 1
                     progress = self._plugin.progress()
                     if not progress:
@@ -74,7 +77,7 @@ class DownloadManager():
 
     def finalize(self):
         if self._count:
-            self.logger.info("Done! A total of {} were downloaded.".format(self._count))
+            self.logger.info("Done! A total of {} files were downloaded.".format(self._count))
 
             # Check if finalize() has been overridden and call if it has.
             if self._plugin.finalize.__code__ is not super(self._plugin.__class__, self._plugin).finalize.__code__:
