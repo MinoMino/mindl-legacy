@@ -4,3 +4,5 @@ downloads/
 exception_state.png
 __pycache__/
 urls.txt
+mindl/plugins/sokuyomi/
+mindl/plugins/sokuyomi_html5.py
