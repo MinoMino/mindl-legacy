@@ -88,7 +88,7 @@ def configure_parser():
     parser.add_argument("-v", "--verbose", action="store_true", help="makes the logger output debugging strings")
     parser.add_argument("-d", "--defaults", action="store_true",
                         help="makes the plugin use default values for options if it can instead of prompting")
-    parser.add_argument("-p", "--plugin", help="explicitly set which plugin should handle the URL in the case where"
+    parser.add_argument("-p", "--plugin", help="explicitly set which plugin should handle the URL in the case where "
                         "two or more plugins can handle the same URL")
     parser.add_argument("-f", "--file", help="the path to a text file containing URLs to be processed, separated by lines",
                         metavar="PATH", type=argparse.FileType("r", encoding="UTF-8"), dest="url", action=UrlListFileParseAction)

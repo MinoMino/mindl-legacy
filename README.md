@@ -39,8 +39,7 @@ optional arguments:
                         can instead of prompting
   -p PLUGIN, --plugin PLUGIN
                         explicitly set which plugin should handle the URL in
-                        the case wheretwo or more plugins can handle the same
-                        URL
+                        the case where two or more plugins can handle the same URL
   -f PATH, --file PATH  the path to a text file containing URLs to be
                         processed, separated by lines
   -D DIRECTORY, --directory DIRECTORY
