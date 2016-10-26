@@ -2,15 +2,15 @@
 A plugin-based downloading tool. It was written with Python 3.5+ in mind, so while it's likely that at least 3.4 works,
 it's possible I've used new stuff that could potentially make it incompatible.
 
-It was written for the purpose of downloading e-books using PhantomJS from sites that use HTML5 readers, which is
-why it requires Selenium. The framework can however obviously be used for anything.
+It was written for the purpose of downloading e-books from sites that use HTML5 readers, which is
+why some plugins require Selenium and PhantomJS. The framework can however obviously be used for anything.
 
-As of right now, it only works with eBookJapan. If you've got some other HTML5 reader you want supported and you
-can provide a sample, I will consider writing a plugin for it. Open an issue here or send me an e-mail about it.
+If you've got some other HTML5 reader you want supported and you can provide a sample, I will consider writing a plugin for it.
+Open an issue here or send me an e-mail about it.
 
 ## Installation
 * Install Python 3.5+
-* Download PhantomJS from [here](http://phantomjs.org/download.html) and put the executable in your PATH. If you're on
+* If you're planning to use it for eBookJapan, download PhantomJS from [here](http://phantomjs.org/download.html) and put the executable in your PATH. If you're on
 Linux, remember to make it executable as well.
 * Run the following command to install mindl:
 `python -m pip install git+https://github.com/MinoMino/mindl.git#egg=mindl`
@@ -49,18 +49,32 @@ optional arguments:
 
 To run it, use Python's `-m` argument to run modules: `python -m mindl [...]`
 
-## Example
+### Example
 ```
 mino$ python -m mindl -o email=some@mail.com -o password=mypassword123 "https://br.ebookjapan.jp/br/reader/viewer/view.html?sessionid=[...]&keydata=[...]&shopID=eBookJapan"
 (06:20 INFO) URL is being handled by plugin: eBookJapan v0.1
 (06:20 INFO) Starting download...
 [...]
-(06:27 INFO) Done! A total of 206 were downloaded.
+(06:27 INFO) Done! A total of 206 files were downloaded.
 (06:27 INFO) Finalizing...
 ```
 
 **Make sure you use double quotes around each URL, or the console will interpret the ampersands as multiple console commands
 instead of part of the URL(s).**
 
-In the above example I've put it my credentials using the `-o` argument, but if you leave one or both out,
+In the above example I've put in my credentials using the `-o` argument, but if you leave one or both out,
 you will instead be prompted for the missing options at launch.
+
+## Supported Sites
+#### eBookJapan
+Uses Selenium and PhantomJS to navigate through the HTML5 reader, sequentially reading the pages off the canvases.
+It's somewhat slow because of this.
+
+Needs e-mail and password supplied so that it can log on.
+
+#### BookLive
+Directly interacts with the API and descrambles the images using [pillow](https://python-pillow.org/) for image
+processing. Uses threads to download and descramble images, so it's very fast.
+
+If you do not supply e-mail and password, it will not log on and instead download the trial pages. Make sure
+you pass it the credentials if you own the book you wish to download.
