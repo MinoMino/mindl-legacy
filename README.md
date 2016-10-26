@@ -63,7 +63,8 @@ mino$ python -m mindl -o username=some@mail.com -o password=mypassword123 "https
 instead of part of the URL(s).**
 
 In the above example I've put in my credentials using the `-o` argument, but if you leave one or both out,
-you will instead be prompted for the missing options at launch.
+you will instead be prompted for the missing options at launch. This only applies if the plugin *requires*
+credentials, though.
 
 ## Supported Sites
 #### eBookJapan
