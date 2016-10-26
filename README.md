@@ -6,7 +6,9 @@ It was written for the purpose of downloading e-books from sites that use HTML5 
 why some plugins require Selenium and PhantomJS. The framework can however obviously be used for anything.
 
 If you've got some other HTML5 reader you want supported and you can provide a sample, I will consider writing a plugin for it.
-Open an issue here or send me an e-mail about it.
+Open an issue here or send me an e-mail about it. I cannot promise a plugin that downloads from their API if the images are
+scrambled because reverse engineering heavily obfuscated JavaScript can be hard and very time consuming, but the PhantomJS approach is
+usually fairly easy in contrast.
 
 ## Installation
 * Install Python 3.5+
