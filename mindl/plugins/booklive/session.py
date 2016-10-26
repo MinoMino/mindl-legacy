@@ -47,13 +47,13 @@ PURCHASE_URL = "https://booklive.jp/purchase/product/title_id/{}/vol_no/{}/direc
 RE_IMAGE_PATH = re.compile(r"t-img src=\"(.+?)\"")
 
 class BookliveSession():
-    def __init__(self, username="", password=""):
+    def __init__(self):
         self.cookies = http.cookiejar.CookieJar(http.cookiejar.DefaultCookiePolicy())
 
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookies))
         self._logged_in = False
-        self._username = username
-        self._password = password
+        self._username = ""
+        self._password = ""
         self._session = ""
         self._pages = None
         self.filenames = None
