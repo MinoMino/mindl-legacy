@@ -64,7 +64,8 @@ class booklive_html5(BasePlugin):
         if self["username"] and self["password"]:
             self._session.login(self["username"], self["password"])
         elif self["username"] or self["password"]:
-            raise ValueError("Both username and password needs to be supplied, not just one of them.")
+            self.logger.critical("Both username and password needs to be supplied, not just one of them.")
+            exit(1)
         self._content_info = self._session.get_content_info(self._cid)
         self._content = self._session.get_content(self._cid)
         self._descramble = self._session.get_descrambling_data(self._cid)
@@ -88,6 +89,12 @@ class booklive_html5(BasePlugin):
         # sbcGetImg.php API acting as a proxy.
         trial = True if self._content_info["ServerType"] == 1 else False
         self.metadata["Trial"] = trial
+        if trial:
+            if self["username"] and self["password"]:
+                self.logger.warning("Username and password was supplied, but the server is responding with "
+                    "a trial. You do not seem to own the book, meaning the book will NOT contain all pages.")
+            else:
+                self.logger.warning("The server responded with a trial. This means the book does NOT contain all pages.")
 
         # Use above metadata to name our target directory.
         if "Title" in self.metadata:
