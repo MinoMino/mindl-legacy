@@ -34,7 +34,7 @@ __version__ = "0.1"
 MAX_ERRORS = 20
 
 RE_BOOK = re.compile(r"^https?://booklive.jp/product/index/title_id/(?P<title_id>[0-9]+?)/vol_no/(?P<volume>[0-9]+?)$")
-RE_TITLE = re.compile(r".+(\([0-9]+\))$")
+RE_TITLE_CLEANUP = re.compile(r".+?( ?\([0-9]+\)| ?[0-9]+巻)$")
 
 # Data we should take from the content info response and pull it into our metadata.
 METADATA = ("Authors", "Publisher", "PublisherRuby", "Title", "TitleRuby", "Categories", "Publisher",
@@ -78,9 +78,9 @@ class booklive_html5(BasePlugin):
                 self.metadata[md] = self._content_info[md]
 
         # Clean up the title a bit by removing the full-width stuff at the end of the title
-        # (e.g. （４） for volume 4) and instead use the "Volume" entry.
+        # (e.g. （４） for volume 4) and instead use the "Volume" entry later.
         if "Title" in self.metadata:
-            r = RE_TITLE.match(unicodedata.normalize("NFKC", self.metadata["Title"]))
+            r = RE_TITLE_CLEANUP.match(unicodedata.normalize("NFKC", self.metadata["Title"]))
             if r:
                 self.metadata["Title"] = self.metadata["Title"][:-len(r.group(1))]
 
@@ -101,6 +101,10 @@ class booklive_html5(BasePlugin):
                 self._directory += " 【{}】".format("×".join(names))
         else:
             self._directory = super().directory()
+
+        # To avoid confusion, tag the directory whenever it's a trial.
+        if trial:
+            self._directory = "［立ち読み版］" + self._directory
         
         # Threading stuff.
         self._thread_count = int(self["threads"])
