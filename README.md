@@ -51,7 +51,7 @@ To run it, use Python's `-m` argument to run modules: `python -m mindl [...]`
 
 ### Example
 ```
-mino$ python -m mindl -o email=some@mail.com -o password=mypassword123 "https://br.ebookjapan.jp/br/reader/viewer/view.html?sessionid=[...]&keydata=[...]&shopID=eBookJapan"
+mino$ python -m mindl -o username=some@mail.com -o password=mypassword123 "https://br.ebookjapan.jp/br/reader/viewer/view.html?sessionid=[...]&keydata=[...]&shopID=eBookJapan"
 (06:20 INFO) URL is being handled by plugin: eBookJapan v0.1
 (06:20 INFO) Starting download...
 [...]

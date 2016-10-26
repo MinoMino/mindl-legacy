@@ -40,7 +40,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0"
 
 class ebookjapan(BasePlugin):
     name = "eBookJapan"
-    options = ( ("@email", ""),
+    options = ( ("@username", ""),
                 ("@password", "") )
 
     def __init__(self, url):
@@ -92,7 +92,7 @@ class ebookjapan(BasePlugin):
         # We use requests to login, since it's a lot faster. We then copy the
         # resulting cookies to PhantomJS.
         r = requests.post(API_LOGIN,
-            json={"email": self["email"], "password": self["password"], "spoofing": 0},
+            json={"email": self["username"], "password": self["password"], "spoofing": 0},
             headers={"user-agent": USER_AGENT})
         if r.status_code != 200:
             raise RuntimeError("Login failed with status code {}: {}".format(r.status_code, r.text))
@@ -103,7 +103,7 @@ class ebookjapan(BasePlugin):
             self.d.add_cookie({"name": c.name, "value": c.value, "domain": domain, "path": c.path})
 
     def downloader(self):
-        self.logger.debug("Logging in as '{}'...".format(self["email"]))
+        self.logger.debug("Logging in as '{}'...".format(self["username"]))
         self.login()
 
         if "br.ebookjapan.jp" not in self.url:
