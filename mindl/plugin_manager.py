@@ -43,6 +43,8 @@ class PluginManager():
                 module = importlib.import_module(modname)
             except ImportError as e:
                 self.logger.warning("Plugin '{}' could not be loaded: {}".format(modname.split(".")[-1], e))
+                continue
+            
             classname = modname.split(".")[-1]
             if hasattr(module, classname) and issubclass(getattr(module, classname).__class__, BasePlugin.__class__):
                 self.logger.debug("Loading plugin '{}'...".format(classname))
