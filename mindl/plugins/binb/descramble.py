@@ -24,10 +24,7 @@ import io
 from collections import namedtuple
 
 """
-Class to descramble e-book pages served by Booklive using the provided descramble data.
-Booklive's reader is based on BinB Reader, which is a reader used in other sites as well,
-but I have not tried it on other sites as of right now. I will eventually, though. Once
-I do, I could revisit this module and perhaps make it work for several BinB Reader sites.
+Class to descramble e-book pages served by BinB Reader using the provided descramble data.
 
 A lot of it will look very ugly and unreadable, but that's done on purpose. Keeping it close
 to how the JS does it makes it easier to compare the codes side-by-side and fix potential issues
@@ -35,9 +32,9 @@ in the future. Due to the obfuscated nature of the JS, variable names are stripp
 part, so I've taken the liberty of renaming those in this code whenever the purpose of a
 variable is evident.
 
-BookliveDescrambler.decrypt() takes a file object and returns the data in bytes. If you need to
+BinBDescrambler.decrypt() takes a file object and returns the data in bytes. If you need to
 pass it bytes, wrap them in io.BytesIO first and it'll act similar to a file. The filename argument
-is the filename of the image *as named by Booklive*, not the desired filename. This filename is
+is the filename of the image *as named by BinB*, not the desired filename. This filename is
 used by the descramble algorithm to determine which of its 8 descrambling keys it should use.
 """
 
@@ -55,7 +52,7 @@ TNP_ARRAY = (-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 # Named tuple to hold descramble data for each rectangle.
 DescrambleRectangle = namedtuple("DescrambleRectangle", ["dst_x", "dst_y", "src_x", "src_y", "width", "height"])
 
-class BookliveDescrambler:
+class BinBDescrambler:
     def __init__(self, scramble_data):
         self._ctbl, self._ptbl = scramble_data
         self._h = []
@@ -166,7 +163,7 @@ class BookliveDescrambler:
 
         return t, n, p
 
-    def descramble(self, filename, file, format="JPEG", **params):
+    def descramble(self, filename, file, format="JPEG", **kwargs):
         img = PIL.Image.open(file, mode="r")
         img_arr = img.load()
 
@@ -180,7 +177,12 @@ class BookliveDescrambler:
                     new_arr[x + rect.dst_x, y+rect.dst_y] = img_arr[x + rect.src_x, y + rect.src_y]
         
         image_data = io.BytesIO()
-        new.save(image_data, format=format, **params)
+        if format == "JPEG":
+            if "quality" not in kwargs:
+                kwargs["quality"] = 95
+            if "optimize" not in kwargs:
+                kwargs["optimize"] = True
+        new.save(image_data, format=format, **kwargs)
         img.close()
         new.close()
 

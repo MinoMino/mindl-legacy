@@ -23,12 +23,16 @@ import json
 import time
 import os
 import re
-import io
 
-import plugins.booklive as booklive
+import plugins.binb as binbapi
 from mindl import BasePlugin, download_directory
 
 __version__ = "0.1"
+
+# BIB API URL
+URL_BOOKLIVE_API = "http://booklive.jp/bib-api/"
+URL_LOGIN_SCREEN = "https://booklive.jp/login"
+URL_LOGIN = "https://booklive.jp/login/index"
 
 # Number of errors before it gives up if another error were to happen.
 MAX_ERRORS = 20
@@ -40,7 +44,7 @@ RE_TITLE_CLEANUP = re.compile(r".+?( ?\([0-9]+\)| ?[0-9]+巻)$")
 METADATA = ("Authors", "Publisher", "PublisherRuby", "Title", "TitleRuby", "Categories", "Publisher",
             "PublisherRuby", "Abstract")
 
-class booklive_html5(BasePlugin):
+class booklive(BasePlugin):
     name = "BookLive"
     options = ( ("page_start", "1"),
                 ("page_end", "end"),
@@ -57,26 +61,24 @@ class booklive_html5(BasePlugin):
 
         r = RE_BOOK.match(url)
         self._cid = "{}_{}".format(*r.groups())
-
-        # Start the session and get all the info, preparing for the download.
-        self._session = booklive.BookliveSession()
+        self._binb = binbapi.BinBApi(URL_BOOKLIVE_API, self._cid)
         # Check if we need to login.
+        self._logged_in = False
         if self["username"] and self["password"]:
-            self._session.login(self["username"], self["password"])
+            self._username = self["username"]
+            self._password = self["password"]
+            self.login()
         elif self["username"] or self["password"]:
             self.logger.critical("Both username and password needs to be supplied, not just one of them.")
             exit(1)
-        self._content_info = self._session.get_content_info(self._cid)
-        self._content = self._session.get_content(self._cid)
-        self._descramble = self._session.get_descrambling_data(self._cid)
 
         # A dictionary with info we can use for naming and to include in the zipped file if desired.
         self.metadata = {}
         self.metadata["Volume"] = int(r.group("volume"))
         # Extract info into metadata dictionary.
         for md in METADATA:
-            if md in self._content_info:
-                self.metadata[md] = self._content_info[md]
+            if md in self._binb.content_info:
+                self.metadata[md] = self._binb.content_info[md]
 
         # Clean up the title a bit by removing the full-width stuff at the end of the title
         # (e.g. （４） for volume 4) and instead use the "Volume" entry later.
@@ -87,7 +89,7 @@ class booklive_html5(BasePlugin):
 
         # If it's a trial, the response will point us directly towards their CDN instead of through
         # sbcGetImg.php API acting as a proxy.
-        trial = True if self._content_info["ServerType"] == 1 else False
+        trial = True if self._binb.server_type == binbapi.SERVERTYPE_STATIC else False
         self.metadata["Trial"] = trial
         if trial:
             if self["username"] and self["password"]:
@@ -122,6 +124,28 @@ class booklive_html5(BasePlugin):
         self._errors = 0 # Number of errors while downloading files.
         self._errors_lock = threading.Lock()
 
+    def login(self):
+        # Get a token first.
+        self.logger.debug("Getting a login token...")
+        r = self._binb.session.get(URL_LOGIN_SCREEN)
+        res = re.search("input type=\"hidden\" name=\"token\" value=\"(.+?)\">", r.text)
+        if res:
+            token = res.group(1)
+        else:
+            raise RuntimeError("Failed to get a login token.")
+
+        # Log in.
+        self.logger.debug("Logging in as '{}'...".format(self._username))
+        params = {"mail_addr": self._username, "pswd": self._password, "token": token}
+        r = self._binb.session.post(URL_LOGIN, data=params)
+
+        for cookie in self._binb.session.cookies:
+            if cookie.name == "BL_LI":
+                self.logger.debug("Got session ID: {}".format(cookie.value))
+                self._logged_in = True
+
+        return self._logged_in
+
     @staticmethod
     def can_handle(url):
         if RE_BOOK.match(url):
@@ -133,7 +157,7 @@ class booklive_html5(BasePlugin):
         return self._directory
 
     def progress(self):
-        end_page = len(self._session.filenames) if self["page_end"] == "end" else int(self["page_end"])
+        end_page = len(self._binb.pages) if self["page_end"] == "end" else int(self["page_end"])
         
         return len(self._processed), int(end_page + 1 - int(self["page_start"]))
 
@@ -191,16 +215,19 @@ class booklive_html5(BasePlugin):
         return json.dumps(self.metadata, indent=4, sort_keys=True, ensure_ascii=False)
 
     def _download_and_descramble_many(self, pages):
-        self.logger.debug("Thread #{} started!".format(self._threads.index(threading.current_thread())))
-        descrambler = booklive.BookliveDescrambler(self._descramble)
+        #self.logger.debug("Thread #{} started!".format(self._threads.index(threading.current_thread())))
         while len(pages):
             # Check if we need to stop.
             if self._stop_event.is_set():
                 return
 
             page = pages.pop(0)
-
-            data = self._session.download_page(self._cid, page)
+            try:
+                data = self._binb.get_image(page)
+            except:
+                self.logger.exception("Failed to get an image from the API. Trying again...")
+                data = None
+            
             if data is None:
                 if self._errors >= MAX_ERRORS:
                     self.logger.critical("The number of errors has exceeded the maximum allowed. Aborting!")
@@ -211,15 +238,14 @@ class booklive_html5(BasePlugin):
                         self._errors += 1
                     continue
 
-            self.logger.debug("Descrambling page {}...".format(page))
             keywords = {"format":"PNG", "optimize":True} if bool(int(self["lossless"])) else {"format":"JPEG", "quality":95, "optimize":True}
-            data = descrambler.descramble(self._session.filenames[page], io.BytesIO(data), **keywords)
+            data = self._binb.descramble(page, data, **keywords)
 
             # Add (filename, data) to list for further processing.
             ext = "jpg" if keywords["format"] == "JPEG" else "png"
             self._require_processing.append(("{:04d}.{}".format(page + 1, ext), data))
 
-        self.logger.debug("Thread #{} stopped!".format(self._threads.index(threading.current_thread())))
+        #self.logger.debug("Thread #{} stopped!".format(self._threads.index(threading.current_thread())))
 
     def _split_pages(self, pages):
         thread_pages = [[] for i in range(self._thread_count)]
@@ -237,7 +263,7 @@ class booklive_html5(BasePlugin):
 
     def _start_threads(self):
         # Distribute pages.
-        total = len(self._session.filenames)
+        total = len(self._binb.pages)
         end_page = total if self["page_end"] == "end" else min(total, int(self["page_end"]))
         thread_pages = self._split_pages([i for i in range(end_page)])
         
