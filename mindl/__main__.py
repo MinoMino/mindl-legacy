@@ -20,7 +20,8 @@ import argparse
 import logging
 import sys
 
-from mindl import DownloadManager, PluginManager
+from download_manager import DownloadManager
+from plugin_manager import PluginManager
 
 from collections import namedtuple
 
