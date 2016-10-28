@@ -64,20 +64,29 @@ mino$ python -m mindl -o username=some@mail.com -o password=mypassword123 "https
 **Make sure you use double quotes around each URL, or the console will interpret the ampersands as multiple console commands
 instead of part of the URL(s).**
 
-In the above example I've put in my credentials using the `-o` argument, but if you leave one or both out,
-you will instead be prompted for the missing options at launch. This only applies if the plugin *requires*
-credentials, though.
+If the plugin requires any options to be configured, you can pass them with `-o` like in the above example, but you can
+also just run mindl without passing them and have it prompt you for them later.
 
 ## Supported Sites
-#### eBookJapan
+### eBookJapan
 Uses Selenium and PhantomJS to navigate through the HTML5 reader, sequentially reading the pages off the canvases.
-It's somewhat slow because of this.
+It's somewhat slow because of this. Make sure the PhantomJS executable is in your PATH environment variable.
 
 Needs e-mail and password supplied so that it can log on.
 
-#### BookLive
+##### Usage
+Open the reader and you should get a URL like
+`https://br.ebookjapan.jp/br/reader/viewer/view.html?sessionid=[...]&keydata=[...]&shopID=eBookJapan`
+which is the one you need to pass to mindl. EBJ has protection against account sharing, so make sure
+you both get the URL *and* use mindl from the same IP address.
+
+### BookLive
 Directly interacts with the API and descrambles the images using [pillow](https://python-pillow.org/) for image
-processing. Uses threads to download and descramble images, so it's very fast.
+processing. Uses threads to download and descramble images, so it's very fast. It can also zip the book for you
+after downloading and descrambling everything.
 
 If you do not supply e-mail and password, it will not log on and instead download the trial pages. Make sure
 you pass it the credentials if you own the book you wish to download.
+
+##### Usage
+The URLs used by mindl are just the product pages: `https://booklive.jp/product/index/title_id/[...]/vol_no/[...]`.
