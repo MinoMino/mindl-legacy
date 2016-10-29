@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mindl. If not, see <http://www.gnu.org/licenses/>.
 
-from base_plugin import BasePlugin
+from .base_plugin import BasePlugin
 
 import importlib
 import pkgutil

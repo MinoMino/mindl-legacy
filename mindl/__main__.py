@@ -20,8 +20,8 @@ import argparse
 import logging
 import sys
 
-from download_manager import DownloadManager
-from plugin_manager import PluginManager
+from .download_manager import DownloadManager
+from .plugin_manager import PluginManager
 
 from collections import namedtuple
 
