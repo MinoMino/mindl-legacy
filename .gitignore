@@ -1,6 +1,12 @@
 *.sublime-project
 *.sublime-workspace
+.DS_Store
 build/
+dist/
+mindl.egg-info/
+*.egg-info
+*.pyc
+*.egg
 downloads/
 exception_state.png
 __pycache__/
