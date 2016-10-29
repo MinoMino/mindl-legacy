@@ -183,7 +183,5 @@ class BinBDescrambler:
             if "optimize" not in kwargs:
                 kwargs["optimize"] = True
         new.save(image_data, format=format, **kwargs)
-        img.close()
-        new.close()
 
         return image_data.getvalue()

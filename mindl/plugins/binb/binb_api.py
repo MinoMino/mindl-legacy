@@ -682,26 +682,22 @@ if __name__ == "__main__":
         data = binb.descramble(0, binb.get_image(0))
         img = Image.open(BytesIO(data))
         img.show()
-        img.close()
 
         # get_image_base64
         data = binb.descramble(0, binb.get_image_base64(0))
         img = Image.open(BytesIO(data))
         img.show()
-        img.close()
 
         # get_nec_image
         # Probably doesn't have any nec images, so we overwrite src with a regular image path.
         data = binb.get_nec_image(0, src=binb.page_paths[0])
         img = Image.open(BytesIO(data))
         img.show()
-        img.close()
 
         # get_small_image
         data = binb.descramble(0, binb.get_small_image(0))
         img = Image.open(BytesIO(data))
         img.show()
-        img.close()
     elif name.lower() == "animate":
         binb = BinBApi("http://www.animatebookstore.com/sws/apis/", "662011", u0="280326")
 
@@ -710,19 +706,16 @@ if __name__ == "__main__":
             data = binb.descramble(i, binb.get_image(i))
             img = Image.open(BytesIO(data))
             img.show()
-            img.close()
 
         # get_small_image
         data = binb.descramble(0, binb.get_small_image(0))
         img = Image.open(BytesIO(data))
         img.show()
-        img.close()
     elif name.lower() == "booklive":
         binb = BinBApi("http://booklive.jp/bib-api/", "378252_001")
         for i in range(min(len(binb.pages), 3)):
             data = binb.descramble(i, binb.get_image(i))
             img = Image.open(BytesIO(data))
             img.show()
-            img.close()
     else:
         print("'{}' is an unknown site.".format(name))
