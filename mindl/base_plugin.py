@@ -18,6 +18,7 @@
 
 import logging
 import datetime
+import sys
 
 # If an option key starts with this, make it a required option.
 REQUIRED_MAGIC = "@"
@@ -106,7 +107,7 @@ class BasePlugin():
                 if opt.required and not opt.value:
                     logger.critical("The option '{}' has no default and is required to be set. "
                         "Run again with -o or without -d and input it manually.".format(opt.key))
-                    exit(1)
+                    sys.exit(1)
         elif unset_keys:
             logger.info("Set this plugin's options:")
             for opt in cls.options:
@@ -122,7 +123,7 @@ class BasePlugin():
                     continue
                 if not got:
                     logger.critical("The option '{}' is required!".format(opt.key))
-                    exit(1)
+                    sys.exit(1)
                 else:
                     opt.value = got
             

@@ -21,10 +21,11 @@ import threading
 import os.path
 import json
 import time
+import sys
 import os
 import re
 
-import plugins.binb as binbapi
+import mindl.plugins.binb as binbapi
 from mindl import BasePlugin, download_directory
 
 __version__ = "0.1"
@@ -70,7 +71,7 @@ class booklive(BasePlugin):
             self.login()
         elif self["username"] or self["password"]:
             self.logger.critical("Both username and password needs to be supplied, not just one of them.")
-            exit(1)
+            sys.exit(1)
 
         # A dictionary with info we can use for naming and to include in the zipped file if desired.
         self.metadata = {}

@@ -72,7 +72,7 @@ def configure_parser():
             logger = logging.getLogger("mindl")
             logger.critical("The key-value pair '{}' is not in the right format. Please use 'key=value'.".format(text))
             return ""
-            exit(1)
+            sys.exit(1)
 
         key, value = split
         plugin = None
@@ -106,7 +106,7 @@ def main(args):
     
     if not args.url:
         logger.info("Nothing to do, as no URLs were passed. Use the -h argument to see the usage.")
-        exit()
+        sys.exit()
     
     pm = PluginManager()
     for url in args.url:
@@ -126,7 +126,7 @@ def main(args):
             if not new_eligible:
                 logger.critical("The explicitly set plugin '{}' was not not found in the list of plugins that"
                                 "were eligible to deal with the URL.".format(args.plugin))
-                exit(1)
+                sys.exit(1)
             
             eligible = new_eligible
 
@@ -154,6 +154,6 @@ if __name__ == '__main__':
     parser = configure_parser()
     if len(sys.argv) < 2:
         parser.print_help()
-        exit()
+        sys.exit()
 
     main(parser.parse_args())

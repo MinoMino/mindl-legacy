@@ -666,7 +666,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.DEBUG)
     if len(sys.argv) < 2:
         print("Usage: {} <site_name>".format(sys.argv[0]))
-        exit(0)
+        sys.exit(0)
 
     from PIL import Image
     name = " ".join(sys.argv[1:])

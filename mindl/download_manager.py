@@ -18,6 +18,7 @@
 
 import logging
 import os.path
+import sys
 import os
 
 class DownloadManager():
@@ -32,7 +33,7 @@ class DownloadManager():
     def start_download(self):
         if not self._plugin.has_valid_options():
             self.logger.critical("A download started with invalid options!")
-            exit(1)
+            sys.exit(1)
 
         self.logger.info("Starting download...")
         try:

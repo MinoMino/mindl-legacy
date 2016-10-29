@@ -131,7 +131,7 @@ class ebookjapan(BasePlugin):
             alert_text = self.d.execute_script("return lastAlert")
             if alert_text:
                 self.logger.critical("The reader threw the following error:\n" + alert_text)
-                exit(1)
+                sys.exit(1)
             else:
                 self.logger.critical("No alert was present. Unknown error. Check the exception_state.png"
                     "image for a screenshot of the page when it failed.")
@@ -214,7 +214,7 @@ class ebookjapan(BasePlugin):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: {} <book_url>".format(sys.argv[0]))
-        exit()
+        sys.exit()
 
     ebj = ebookjapan(sys.argv[1])
 

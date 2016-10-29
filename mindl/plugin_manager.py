@@ -21,22 +21,19 @@ from .base_plugin import BasePlugin
 import importlib
 import pkgutil
 import logging
-import os.path
-import os
 import sys
 
 class PluginManager():
-    def __init__(self, path="plugins"):
-        path = os.path.join(os.path.dirname(__file__), path)
+    def __init__(self):
         self.plugins = {}
         self.logger = logging.getLogger("mindl")
 
-        if os.path.isdir(path):
-            sys.path.append(os.path.dirname(path))
-        else:
-            raise FileNotFoundError("Cannot find plugin path '{}'.".format(path))
+        try:
+            package = importlib.import_module("mindl.plugins")
+        except:
+            self.logger.exception("Make sure 'plugins' is a submodule of mindl.")
+            sys.exit(1)
 
-        package = importlib.import_module("plugins")
         prefix = package.__name__ + "."
         for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
             try:
