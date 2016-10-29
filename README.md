@@ -11,8 +11,8 @@ scrambled because reverse engineering heavily obfuscated JavaScript can be hard 
 usually fairly easy in contrast.
 
 ## Installation
-* Install Python 3.5+
-* If you're planning to use it for eBookJapan, download PhantomJS from [here](http://phantomjs.org/download.html) and put the executable in your PATH. If you're on
+* Install [Python 3.5+](https://www.python.org/downloads/)
+* If you're planning to use it for eBookJapan, download [PhantomJS](http://phantomjs.org/download.html) and put the executable in your PATH. If you're on
 Linux, remember to make it executable as well.
 * Run the following command to install mindl:
 `python -m pip install git+https://github.com/MinoMino/mindl.git`
