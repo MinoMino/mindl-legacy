@@ -9,6 +9,7 @@ mindl.egg-info/
 *.egg
 downloads/
 exception_state.png
+ghostdriver.log
 __pycache__/
 urls.txt
 mindl/plugins/sokuyomi/
