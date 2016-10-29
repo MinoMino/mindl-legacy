@@ -30,7 +30,7 @@ from io import BytesIO
 
 try:
     from .descramble import BinBDescrambler
-except ImportError:
+except:
     # Allow this file to be ran as __main__.
     from descramble import BinBDescrambler
 
