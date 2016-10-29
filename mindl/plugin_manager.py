@@ -35,11 +35,11 @@ class PluginManager():
             sys.exit(1)
 
         prefix = package.__name__ + "."
-        for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
+        for importer, modname, ispkg in (m for m in pkgutil.iter_modules(package.__path__, prefix) if not m[2]):
             try:
                 module = importlib.import_module(modname)
             except ImportError as e:
-                self.logger.warning("Plugin '{}' could not be loaded: {}".format(modname.split(".")[-1], e))
+                self.logger.exception("Plugin '{}' could not be loaded: {}".format(modname.split(".")[-1], e))
                 continue
             
             classname = modname.split(".")[-1]
