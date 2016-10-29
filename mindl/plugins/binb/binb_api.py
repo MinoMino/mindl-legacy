@@ -227,10 +227,6 @@ class BinBApi:
 
         return self._pages
 
-    @pages.setter
-    def pages(self, value):
-        self._pages = value
-
     @property
     def page_paths(self):
         if self._page_paths is None:
@@ -241,6 +237,8 @@ class BinBApi:
     @page_paths.setter
     def page_paths(self, value):
         self._page_paths = value
+        # Strip the "pages/" prefix and only keep filenames. Useful for descrambling later.
+        self._pages = tuple([s[s.index("/")+1:] for s in value])
 
     @property
     def nec_pages(self):
@@ -248,10 +246,6 @@ class BinBApi:
             self.get_nec_image_list()
 
         return self._nec_pages
-
-    @nec_pages.setter
-    def nec_pages(self, value):
-        self._nec_pages = value
 
     @property
     def nec_page_paths(self):
@@ -263,6 +257,8 @@ class BinBApi:
     @nec_page_paths.setter
     def nec_page_paths(self, value):
         self._nec_page_paths = value
+        # Strip the "pages/" prefix and only keep filenames.
+        self._nec_pages = tuple([s[s.index("/")+1:] for s in value])
 
     @property
     def server_type(self):
@@ -315,7 +311,7 @@ class BinBApi:
         self.descrambling_data = (ctbl, ptbl)
 
         self.server_type = self._content_info["ServerType"]
-        if self.server_type != SERVERTYPE_STATIC and "p" in self._content_info:
+        if "p" in self._content_info:
             self.p = self._content_info["p"]
         sbc = self._content_info["ContentsServer"]
         self.sbc = sbc if sbc.endswith("/") else sbc + "/"
@@ -414,11 +410,7 @@ class BinBApi:
             if result != 1:
                 raise BinBApiError("get_content returned result: " + str(result))
 
-        # Repeats twice, so we only include first half.
-        page_paths = RE_IMAGE_PATH.findall(self._content["ttx"])
-        self.page_paths = page_paths[:len(page_paths) // 2]
-        # Strip the "pages/" prefix and only keep filenames. Useful for descrambling later.
-        self.pages = tuple([s[s.index("/")+1:] for s in self.page_paths])
+        self.page_paths = self._parse_ttx_pagelist(self._content["ttx"])
 
         return self._content
 
@@ -523,7 +515,6 @@ class BinBApi:
             raise BinBApiError("get_nec_image_list returned result: " + str(ret_code))
 
         self.nec_page_paths = tuple(res["ImageName"])
-        self.pages = tuple([s[s.index("/")+1:] for s in self.nec_page_paths])
         
         return self.nec_page_paths
 
@@ -584,7 +575,6 @@ class BinBApi:
                 raise BinBApiError("get_small_image_list returned result: " + str(ret_code))
 
             self.page_paths = tuple(res["ImageName"])
-            self.pages = tuple([s[s.index("/")+1:] for s in self.page_paths])
         
         return self.page_paths
 
@@ -615,6 +605,12 @@ class BinBApi:
     # ====================================================================
     #                               HELPERS
     # ====================================================================
+
+    @staticmethod
+    def _parse_ttx_pagelist(data):
+        # Repeats twice, so we only include first half.
+        page_paths = RE_IMAGE_PATH.findall(data)
+        return page_paths[:len(page_paths) // 2]
 
     def _assert_sbc_server_type(self):
         """
