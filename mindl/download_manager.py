@@ -21,6 +21,8 @@ import os.path
 import sys
 import os
 
+from .base_plugin import BasePlugin
+
 class DownloadManager():
     base_directory = "downloads"
     
@@ -81,7 +83,7 @@ class DownloadManager():
             self.logger.info("Done! A total of {} files were downloaded.".format(self._count))
 
             # Check if finalize() has been overridden and call if it has.
-            if self._plugin.finalize.__code__ is not super(self._plugin.__class__, self._plugin).finalize.__code__:
+            if self._plugin.finalize.__code__ is not BasePlugin.finalize.__code__:
                 self.logger.info("Finalizing...")
                 self._plugin.finalize()
         else:
