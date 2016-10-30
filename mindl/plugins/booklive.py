@@ -75,7 +75,7 @@ class booklive(BinBPlugin):
 
         # To avoid confusion, tag the directory whenever it's a trial.
         if trial:
-            self._directory = "［立ち読み版］" + self._directory
+            self.metadata["Title"] = "［立ち読み版］" + self.metadata["Title"]
 
     def get_volume(self, content_info):
         return self._volume

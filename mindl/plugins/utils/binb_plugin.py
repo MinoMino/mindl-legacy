@@ -54,7 +54,7 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         self.metadata = {}
 
         self._cid = cid
-        self.binb = binbapi.BinBApi(bib, self._cid)
+        self.binb = binbapi.BinBApi(bib, self._cid, logger=self.logger)
 
         if login:
             self.login(self.binb.session)
@@ -63,23 +63,8 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         for md in METADATA:
             if md in self.binb.content_info:
                 self.metadata[md] = self.binb.content_info[md]
-
-        # Since BinB doesn't keep track of volume, we'll need to get it ourselves.
-        # If it's VOLUME_UNSET, assume it's not set and ignore it instead.
-        self.metadata["Volume"] = self.get_volume(self.binb.content_info)
-
-        # Use above metadata to name our target directory.
-        if "Title" in self.metadata:
-            if "Volume" in self.metadata and self.metadata["Volume"] != VOLUME_UNSET:
-                self._directory = self.metadata["Title"] + " 第{}巻".format(self.metadata["Volume"])
-            else:
-                self._directory = self.metadata["Title"]
-            # We only add the author(s) if they're 3 or fewer. Don't want the filename to get out of hand.
-            if "Authors" in self.metadata and len(self.metadata["Authors"]) <= 3:
-                names = [a["Name"] for a in self.metadata["Authors"]]
-                self._directory += " 【{}】".format("×".join(names))
-        else:
-            self._directory = super().directory()
+        # Further processing is done to the metadata, but we wait until the first download,
+        # so that any subclass can change stuff and/or process stuff before it's changed by us.
 
         # Initialize the threading stuff.
         try:
@@ -105,6 +90,28 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         end_page = len(self.binb.pages) if self["page_end"] == "end" else int(self["page_end"])
         
         return self.download_counter, int(end_page + 1 - int(self["page_start"]))
+
+    def downloader(self):
+        # Since BinB doesn't keep track of volume, we'll need to get it ourselves.
+        # If it's VOLUME_UNSET, assume it's not set and ignore it instead.
+        self.metadata["Volume"] = self.get_volume(self.binb.content_info)
+
+        # Use above metadata to name our target directory.
+        if "Title" in self.metadata:
+            if "Volume" in self.metadata and self.metadata["Volume"] != VOLUME_UNSET:
+                self._directory = self.metadata["Title"] + " 第{}巻".format(self.metadata["Volume"])
+            else:
+                self._directory = self.metadata["Title"]
+            # We only add the author(s) if they're 3 or fewer. Don't want the filename to get out of hand.
+            if "Authors" in self.metadata and len(self.metadata["Authors"]) <= 3:
+                names = [a["Name"] for a in self.metadata["Authors"]]
+                self._directory += " 【{}】".format("×".join(names))
+        else:
+            self._directory = super().directory()
+
+        dler = super().downloader()
+        for dl in dler:
+            yield dl
 
     def finalize(self):
         mydir = os.path.join(download_directory(), self.directory())
@@ -134,7 +141,7 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         return json.dumps(self.metadata, indent=4, sort_keys=True, ensure_ascii=False)
 
     def download_many(self, pages):
-        self.logger.debug("Thread #{} started!".format(self._threads.index(threading.current_thread())))
+        #self.logger.debug("Thread #{} started!".format(self._threads.index(threading.current_thread())))
         while len(pages):
             # Check if we need to stop.
             if self.stop_event.is_set():
@@ -164,4 +171,4 @@ class BinBPlugin(ThreadedDownloaderPlugin):
             ext = "jpg" if keywords["format"] == "JPEG" else "png"
             self.got_download(("{:04d}.{}".format(page + 1, ext), data))
 
-        self.logger.debug("Thread #{} stopped!".format(self._threads.index(threading.current_thread())))
+        #self.logger.debug("Thread #{} stopped!".format(self._threads.index(threading.current_thread())))
