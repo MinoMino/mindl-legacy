@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with mindl. If not, see <http://www.gnu.org/licenses/>.
 
-import threading
 import os.path
 import json
 import sys
@@ -141,7 +140,6 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         return json.dumps(self.metadata, indent=4, sort_keys=True, ensure_ascii=False)
 
     def download_many(self, pages):
-        #self.logger.debug("Thread #{} started!".format(self._threads.index(threading.current_thread())))
         while len(pages):
             # Check if we need to stop.
             if self.stop_event.is_set():
@@ -170,5 +168,3 @@ class BinBPlugin(ThreadedDownloaderPlugin):
             # Add (filename, data) to list for further processing.
             ext = "jpg" if keywords["format"] == "JPEG" else "png"
             self.got_download(("{:04d}.{}".format(page + 1, ext), data))
-
-        #self.logger.debug("Thread #{} stopped!".format(self._threads.index(threading.current_thread())))
