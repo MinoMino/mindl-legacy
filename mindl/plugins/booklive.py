@@ -31,6 +31,7 @@ URL_LOGIN_SCREEN = "https://booklive.jp/login"
 URL_LOGIN = "https://booklive.jp/login/index"
 
 RE_BOOK = re.compile(r"^https?://booklive.jp/product/index/title_id/(?P<title_id>[0-9]+?)/vol_no/(?P<volume>[0-9]+?)$")
+RE_READER = re.compile(r"^https?://booklive.jp/bviewer/\?cid=(?P<cid>[_0-9]+)")
 RE_TITLE_CLEANUP = re.compile(r".+?( ?\([0-9]+\)| ?[0-9]+巻)$")
 
 class booklive(BinBPlugin):
@@ -51,9 +52,16 @@ class booklive(BinBPlugin):
             need_login = False
 
         r = RE_BOOK.match(url)
-        cid = "{}_{}".format(*r.groups())
+        if r:
+            cid = "{}_{}".format(*r.groups())
+            volume = int(r.group("volume"))
+        else:
+            r = RE_READER.match(url)
+            cid = r.group("cid")
+            volume = int(cid.split("_")[1])
+        
         super().__init__(URL_BOOKLIVE_API, cid, login=need_login)
-        self.metadata["Volume"] = int(r.group("volume"))
+        self.metadata["Volume"] = volume
 
         # Clean up the title a bit by removing the full-width stuff at the end of the title
         # (e.g. （４） for volume 4) and instead use the "Volume" entry later.
@@ -101,7 +109,4 @@ class booklive(BinBPlugin):
 
     @staticmethod
     def can_handle(url):
-        if RE_BOOK.match(url):
-            return True
-
-        return False
+        return any((RE_BOOK.match(url), RE_READER.match(url)))

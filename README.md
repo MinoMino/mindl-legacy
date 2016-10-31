@@ -89,7 +89,9 @@ If you do not supply e-mail and password, it will not log on and instead downloa
 you pass it the credentials if you own the book you wish to download.
 
 ##### Usage
-The URLs used by mindl are just the product pages: `https://booklive.jp/product/index/title_id/[...]/vol_no/[...]`.
+The URLs handled by this plugin:
+* Product pages: `https://booklive.jp/product/index/title_id/[...]/vol_no/[...]`
+* Reader: `https://booklive.jp/bviewer/?cid=[...]&rurl=[...]`
 
 ### AnimateBookstore
 Based on the same reader used on BookLive, so it works virtually the same way. I don't have a paid book owned there myself
