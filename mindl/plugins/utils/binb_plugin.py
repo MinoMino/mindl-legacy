@@ -29,8 +29,6 @@ from mindl.plugins.utils.threaded_downloader import ThreadedDownloaderPlugin
 METADATA = ["Authors", "Publisher", "PublisherRuby", "Title", "TitleRuby", "Categories", "Publisher",
             "PublisherRuby", "Abstract"]
 
-VOLUME_UNSET = -999
-
 # Number of errors before it gives up if another error were to happen.
 MAX_ERRORS = 20
 
@@ -76,9 +74,6 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         # Distribute page numbers for the threads.
         self.distribute_items(range(len(self.binb.pages)), expected_downloads=len(self.binb.pages))
 
-    def get_volume(self, content_info):
-        return VOLUME_UNSET
-
     def login(self):
         raise NotImplementedError("Login method needs to be implemented if login=True.")
     
@@ -91,13 +86,9 @@ class BinBPlugin(ThreadedDownloaderPlugin):
         return self.download_counter, int(end_page + 1 - int(self["page_start"]))
 
     def downloader(self):
-        # Since BinB doesn't keep track of volume, we'll need to get it ourselves.
-        # If it's VOLUME_UNSET, assume it's not set and ignore it instead.
-        self.metadata["Volume"] = self.get_volume(self.binb.content_info)
-
         # Use above metadata to name our target directory.
         if "Title" in self.metadata:
-            if "Volume" in self.metadata and self.metadata["Volume"] != VOLUME_UNSET:
+            if "Volume" in self.metadata:
                 self._directory = self.metadata["Title"] + " 第{}巻".format(self.metadata["Volume"])
             else:
                 self._directory = self.metadata["Title"]

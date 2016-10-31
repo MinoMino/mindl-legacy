@@ -52,8 +52,8 @@ class booklive(BinBPlugin):
 
         r = RE_BOOK.match(url)
         cid = "{}_{}".format(*r.groups())
-        self._volume = int(r.group("volume"))
         super().__init__(URL_BOOKLIVE_API, cid, login=need_login)
+        self.metadata["Volume"] = int(r.group("volume"))
 
         # Clean up the title a bit by removing the full-width stuff at the end of the title
         # (e.g. （４） for volume 4) and instead use the "Volume" entry later.
@@ -77,9 +77,6 @@ class booklive(BinBPlugin):
         if trial:
             self.metadata["Title"] = "［立ち読み版］" + self.metadata["Title"]
 
-    def get_volume(self, content_info):
-        return self._volume
-
     def login(self, session):
         # Get a token first.
         self.logger.debug("Getting a login token...")
@@ -98,9 +95,9 @@ class booklive(BinBPlugin):
         for cookie in session.cookies:
             if cookie.name == "BL_LI":
                 self.logger.debug("Got session ID: {}".format(cookie.value))
-                self._logged_in = True
+                return True
 
-        return self._logged_in
+        return False
 
     @staticmethod
     def can_handle(url):
