@@ -44,7 +44,7 @@ class BinBPlugin(ThreadedDownloaderPlugin):
 
     # Data we should take from the content info response and pull it into our metadata.
     extract_metadata = ["Authors", "Publisher", "PublisherRuby", "Title", "TitleRuby",
-        "Categories", "Publisher", "PublisherRuby", "Abstract"]
+        "Categories", "Publisher", "PublisherRuby", "Abstract", "Volume", "Description"]
 
     def __init__(self, bib, cid, login=True, **kwargs):
         # A dictionary with info we can use for naming and to include in the zipped file if desired.
