@@ -55,6 +55,7 @@ class animatebookstore(BinBPlugin):
             need_login = False
 
         s = requests.Session()
+        s.headers.update({"User-Agent": binbapi.USER_AGENT})
         # Get product ID and content ID.
         regex = RE_BOOK.match(url)
         if regex:
