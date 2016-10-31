@@ -90,3 +90,18 @@ you pass it the credentials if you own the book you wish to download.
 
 ##### Usage
 The URLs used by mindl are just the product pages: `https://booklive.jp/product/index/title_id/[...]/vol_no/[...]`.
+
+### AnimateBookstore
+Based on the same reader used on BookLive, so it works virtually the same way. I don't have a paid book owned there myself
+so I can't actually confirm it works like it should for paid books, but I believe it should. If you use it for one,
+I'd appreciate if you could tell me whether or not it works.
+
+You can run it without supplying credentials, but some trials still require them, so I'd recommend just supplying them
+whenever you can. You might get a warning about books being trials when they're not, but it's because I don't have a
+good way to tell whether or not it's a trial without actually having a book bought there. Just pay attention to the
+page count to tell whether or not you're getting the full book.
+
+##### Usage
+The URLs handled by this plugin:
+* Product pages: `https://www.animatebookstore.com/products/detail.php?product_id=[...]`
+* Reader: `http://www.animatebookstore.com/bookview/?u0=[...]&cid=[...]`
