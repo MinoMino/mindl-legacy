@@ -107,7 +107,7 @@ class BinBApi:
     # I've never seen anything over M, so for now I'm assuming it doesn't exist.
     image_size_priorities = ("M_H", "S_H", "M_L", "S_L") # SS omitted.
     
-    def __init__(self, bib_url, cid, logger=None, **kwargs):
+    def __init__(self, bib_url, cid, logger=None, requests_session=None, **kwargs):
         self._bib = bib_url if bib_url.endswith("/") else bib_url + "/"
         self._kwargs = kwargs
         self._sbc = None
@@ -127,7 +127,7 @@ class BinBApi:
         self._descrambling_data = None
         self._descrambler = None
 
-        self.session = requests.Session()
+        self.session = requests_session or requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
 
         # If set to True, allow SBC methods while in SERVERTYPE_STATIC if we have 'p'.
