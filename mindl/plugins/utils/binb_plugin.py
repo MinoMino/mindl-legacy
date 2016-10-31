@@ -136,7 +136,7 @@ class BinBPlugin(ThreadedDownloaderPlugin):
             if self.stop_event.is_set():
                 return
 
-            page = pages.pop(0)
+            page = pages[0]
             try:
                 data = self.binb.get_image(page)
             except:
@@ -159,3 +159,4 @@ class BinBPlugin(ThreadedDownloaderPlugin):
             # Add (filename, data) to list for further processing.
             ext = "jpg" if keywords["format"] == "JPEG" else "png"
             self.got_download(("{:04d}.{}".format(page + 1, ext), data))
+            pages.pop(0)
