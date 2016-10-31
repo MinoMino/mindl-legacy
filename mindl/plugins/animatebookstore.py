@@ -34,7 +34,7 @@ URL_LOGIN_PAGE = "https://www.animatebookstore.com/mypage/"
 URL_LOGIN = "https://www.animatebookstore.com/frontparts/login_check.php"
 
 RE_BOOK = re.compile(r"^https?://(?:www.)?animatebookstore.com/products/detail.php\?product_id=(?P<product_id>\d+?)", flags=re.ASCII)
-RE_BOOKVIEW = re.compile(r"https?://(?:www.)?animatebookstore.com/bookview/\?u0=(?P<product_id>\d+?)&amp;cid=(?P<cid>\d+)", flags=re.ASCII)
+RE_BOOKVIEW = re.compile(r"https?://(?:www.)?animatebookstore.com/bookview/\?u0=(?P<product_id>\d+?)&(?:amp;)?cid=(?P<cid>\d+)", flags=re.ASCII)
 RE_TITLE_CLEANUP = re.compile(r".+?( ?(?P<volume>[0-9]+)巻)$")
 
 class animatebookstore(BinBPlugin):
@@ -63,7 +63,7 @@ class animatebookstore(BinBPlugin):
             product_id, cid = RE_BOOKVIEW.search(r.text).groups()
         else:
             regex = RE_BOOKVIEW.match(url)
-            product_id, cid = RE_BOOKVIEW.search(r.text).groups()
+            product_id, cid = regex.groups()
 
         # Login if we've been passed credentials.
         if need_login and not self.login(s):
