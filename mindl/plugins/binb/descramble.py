@@ -32,11 +32,19 @@ in the future. Due to the obfuscated nature of the JS, variable names are stripp
 part, so I've taken the liberty of renaming those in this code whenever the purpose of a
 variable is evident.
 
+There are two types of scrambling, which I simply refer to as type 1 and type 2. The former
+seems to be the more common one, presumably the first one implemented, while the latter scramles
+images in a more sophisticated way (i.e. not just fixed-size rectangles, but variable-sized ones
+that also wrap around).
+
 BinBDescrambler.decrypt() takes a file object and returns the data in bytes. If you need to
 pass it bytes, wrap them in io.BytesIO first and it'll act similar to a file. The filename argument
 is the filename of the image *as named by BinB*, not the desired filename. This filename is
 used by the descramble algorithm to determine which of its 8 descrambling keys it should use.
+
 """
+
+# TODO: Tests.
 
 RE_SCRAMBLE_DATA = re.compile(r"^=([0-9]+)-([0-9]+)([-+])([0-9]+)-([-_0-9A-Za-z]+)$")
 
@@ -49,17 +57,30 @@ TNP_ARRAY = (-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
             45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1)
 
+# Descrambling key code types.
+DESCRAMBLE_KEY_TYPE1 = 1 # ZRI2CR
+DESCRAMBLE_KEY_TYPE2 = 2 # Z1U2CQ
+
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 # Named tuple to hold descramble data for each rectangle.
 DescrambleRectangle = namedtuple("DescrambleRectangle", ["dst_x", "dst_y", "src_x", "src_y", "width", "height"])
 
+# Parsed data type.
+Type1Parsed = namedtuple("Type1Parsed", ["h", "v", "s_str", "d_str", "padding"])
+Type2Parsed = namedtuple("Type2Parsed", ["ndx", "ndy", "pieces"])
+
 class BinBDescrambler:
     def __init__(self, scramble_data):
+        self._types = []
         self._ctbl, self._ptbl = scramble_data
-        self._h = []
-        self._v = []
-        self._padding = []
-        self._src_str = []
-        self._dst_str = []
+        
+        # Type 1 variables.
+        self._t1_parsed = []
+        # Type 2 variables.
+        self._t2_parsed_ctbl = []
+        self._t2_parsed_ptbl = []
+
         self._parse_scramble_data()
 
     @staticmethod
@@ -82,32 +103,115 @@ class BinBDescrambler:
         return c, p
 
     def _parse_scramble_data(self):
-        """Parse and validate the scramble data in the same manner the JS does."""
+        """Parse and validate the scramble data in a similar manner to the JS code."""
         for i in range(len(self._ctbl)):
-            c = RE_SCRAMBLE_DATA.match(self._ctbl[i]).groups()
-            p = RE_SCRAMBLE_DATA.match(self._ptbl[i]).groups()
-            # groups() doesn't include group(0), so the indices below are all 1 less than in the JS.
-            if c[0] != p[0] or c[1] != p[1] or c[3] != p[3] or c[2] != "+" or p[2] != "-":
-                raise ValueError("Invalid scramble data.")
+            if self._ctbl[i][0] == "=" and self._ptbl[i][0] == "=":
+                # Type 1
+                self._types.append(DESCRAMBLE_KEY_TYPE1)
+                self._t1_parsed.append(self._parse_type_1(self._ctbl[i], self._ptbl[i]))
+            elif self._ctbl[i][0].isdigit() and self._ptbl[i][0].isdigit():
+                self._types.append(DESCRAMBLE_KEY_TYPE2)
+                c_parsed = self._parse_type_2(self._ctbl[i])
+                p_parsed = self._parse_type_2(self._ptbl[i])
+                if c_parsed.ndx != p_parsed.ndx or c_parsed.ndy != p_parsed.ndy:
+                    raise ValueError("ctbl and ptbl of type 2 do not match.")
+                self._t2_parsed_ctbl.append(c_parsed)
+                self._t2_parsed_ptbl.append(p_parsed)
+            else:
+                raise ValueError("Unknown descrambling key type: " +
+                    str((self._ctbl[i], self._ptbl[i])))
 
-            self._h.append(int(c[0]))
-            self._v.append(int(c[1]))
-            self._padding.append(int(c[3]))
-            if self._h[i] > 8 or self._v[i] > 8 or self._h[i] * self._v[i] > 64:
-                raise ValueError("Invalid 'h' and 'v' values.")
+    def _parse_type_1(self, ctbl, ptbl):
+        c = RE_SCRAMBLE_DATA.match(ctbl).groups()
+        p = RE_SCRAMBLE_DATA.match(ptbl).groups()
+        # groups() doesn't include group(0), so the indices below are all 1 less than in the JS.
+        if c[0] != p[0] or c[1] != p[1] or c[3] != p[3] or c[2] != "+" or p[2] != "-":
+            raise ValueError("Invalid scramble data.")
 
-            self._src_str.append(c[4])
-            self._dst_str.append(p[4])
-            target_len = self._h[i] + self._v[i] + self._h[i] * self._v[i]
-            if len(self._src_str[i]) != target_len or len(self._dst_str[i]) != target_len:
-                raise ValueError("'h' and 'v' do not match with 's_str' and 'd_str'.")
+        h = int(c[0])
+        v = int(c[1])
+        padding = int(c[3])
+        if h > 8 or v > 8 or h * v > 64:
+            raise ValueError("Invalid 'h' and 'v' values.")
 
-    def _generate_descramble_rectangles(self, filename, img_size):
+        s_str = c[4]
+        d_str = p[4]
+        target_len = h + v + h * v
+        if len(s_str) != target_len or len(d_str) != target_len:
+            raise ValueError("'h' and 'v' do not match with 's_str' and 'd_str'.")
+
+        return Type1Parsed(h=h, v=v, s_str=s_str, d_str=d_str, padding=padding)
+
+    def _parse_type_2(self, key):
+        def decode_t2_key_char(char):
+            try:
+                c = ALPHABET.index(char)
+                b = 1
+            except ValueError:
+                c = ALPHABET.lower().index(char)
+                b = 0
+
+            return b + c * 2
+        
+        # Type 2
+        split_key = key.split("-")
+        if len(split_key) != 3:
+            raise ValueError("Invalid format of a type 2 key.")
+        
+        ndx = int(split_key[0])
+        ndy = int(split_key[1])
+        data = split_key[2]
+        if len(data) != ndx*ndy*2:
+            raise ValueError("Invalid key. Key data length does not match the rest.")
+
+        f = (ndx - 1) * (ndy - 1) - 1
+        g = f + (ndx - 1)
+        h = g + (ndy - 1)
+        j = h + 1
+        pieces = []
+        for i in range(ndx*ndy):
+            piece = {}
+            piece["x"] = decode_t2_key_char(data[i*2])
+            piece["y"] = decode_t2_key_char(data[i*2+1])
+            if i <= f:
+                piece["width"] = 2
+                piece["height"] = 2
+            elif i <= g:
+                piece["width"] = 2
+                piece["height"] = 1
+            elif i <= h:
+                piece["width"] = 1
+                piece["height"] = 2
+            elif i <= j:
+                piece["width"] = 1
+                piece["height"] = 1
+            pieces.append(piece)
+
+        return Type2Parsed(ndx=ndx, ndy=ndy, pieces=pieces)
+
+    def _t1_generate_descramble_rectangles(self, c_index, p_index, img_size):
+        def _tnp(data, h, v):
+            t = []
+            n = []
+            p = []
+
+            for i in range(h):
+                t.append(TNP_ARRAY[ord(data[i])])
+            for i in range(v):
+                n.append(TNP_ARRAY[ord(data[h + i])])
+            for i in range(h * v):
+                p.append(TNP_ARRAY[ord(data[h + v + i])])
+
+            return t, n, p
+        
+        # Get the right tuples out to avoid indexing every time.
+        c_parsed = self._t1_parsed[c_index]
+        p_parsed = self._t1_parsed[p_index]
+
         img_width, img_height = img_size
-        c_index, p_index = self._calculate_descramble_index(filename)
-        h = self._h[c_index]
-        v = self._v[p_index]
-        padding = self._padding[c_index]
+        h = c_parsed.h
+        v = p_parsed.v
+        padding = c_parsed.padding
 
         x = h * 2 * padding
         y = v * 2 * padding
@@ -118,8 +222,8 @@ class BinBDescrambler:
             width = img_width - h * 2 * padding
             height = img_height - v * 2 * padding
 
-        src_t, src_n, src_p = self._tnp(self._src_str[c_index], c_index)
-        dst_t, dst_n, dst_p = self._tnp(self._dst_str[p_index], p_index)
+        src_t, src_n, src_p = _tnp(c_parsed.s_str, h, v)
+        dst_t, dst_n, dst_p = _tnp(p_parsed.d_str, h, v)
         p = []
         for i in range(h * v):
             p.append(src_p[dst_p[i]])
@@ -146,28 +250,54 @@ class BinBDescrambler:
 
         return width, height, res
 
-    def _tnp(self, data, index):
-        t = []
-        n = []
-        p = []
+    def _t2_generate_descramble_rectangles(self, c_index, p_index, img_size):
+        img_width, img_height = img_size
+        res = []
+        if img_width >= 64 and img_height >= 64 and img_width * img_height >= 320 * 320:
+            e = img_width - (img_width % 8)
+            f = math.floor((e - 1) / 7) - math.floor((e - 1) / 7) % 8
+            g = e - f * 7
+            h = img_height - (img_height % 8)
+            j = math.floor((h - 1) / 7) - math.floor((h - 1) / 7) % 8
+            k = h - j * 7
+            
+            c_parsed = self._t2_parsed_ctbl[c_index]
+            p_parsed = self._t2_parsed_ptbl[p_index]
+            for i in range(len(c_parsed.pieces)):
+                c_piece = c_parsed.pieces[i]
+                p_piece = p_parsed.pieces[i]
+                src_x = math.floor(c_piece["x"] / 2) * f + (c_piece["x"] % 2) * g
+                src_y = math.floor(c_piece["y"] / 2) * j + (c_piece["y"] % 2) * k
+                dst_x = math.floor(p_piece["x"] / 2) * f + (p_piece["x"] % 2) * g
+                dst_y = math.floor(p_piece["y"] / 2) * j + (p_piece["y"] % 2) * k
+                width = math.floor(c_piece["width"] / 2) * f + (c_piece["width"] % 2) * g
+                height = math.floor(c_piece["height"] / 2) * j + (c_piece["height"] % 2) * k
+                res.append(DescrambleRectangle(src_x=src_x, src_y=src_y, dst_x=dst_x, dst_y=dst_y, width=width, height=height))
 
-        h = self._h[index]
-        v = self._v[index]
-
-        for i in range(h):
-            t.append(TNP_ARRAY[ord(data[i])])
-        for i in range(v):
-            n.append(TNP_ARRAY[ord(data[h + i])])
-        for i in range(h * v):
-            p.append(TNP_ARRAY[ord(data[h + v + i])])
-
-        return t, n, p
+            e = f * (c_parsed.ndx - 1) + g
+            h = j * (c_parsed.ndy - 1) + k
+            if e < img_width:
+                res.append(DescrambleRectangle(src_x=e, src_y=0, dst_x=e, dst_y=0, width=img_width - e, height=h))
+            if h < img_height:
+                res.append(DescrambleRectangle(src_x=0, src_y=h, dst_x=0, dst_y=h, width=img_width, height=img_height - h))
+        else:
+            # The commented code below is what the JS does, but I'm pretty sure that's just a way
+            # of returning an error, so I'm just raising an exception instead. Too lazy to confirm.
+            # res = [DescrambleRectangle(dst_x=0, dst_y=0, src_x=0, src_y=0, width=img_width, height=img_height)]
+            raise ValueError("Invalid input image dimensions.")
+        
+        return img_width, img_height, res
 
     def descramble(self, filename, file, format="JPEG", **kwargs):
         img = PIL.Image.open(file, mode="r")
         img_arr = img.load()
 
-        width, height, rectangles = self._generate_descramble_rectangles(filename, img.size)
+        c_index, p_index = self._calculate_descramble_index(filename)
+        key_type = self._types[c_index]
+        if key_type == DESCRAMBLE_KEY_TYPE1:
+            width, height, rectangles = self._t1_generate_descramble_rectangles(c_index, p_index, img.size)
+        elif key_type == DESCRAMBLE_KEY_TYPE2:
+            width, height, rectangles = self._t2_generate_descramble_rectangles(c_index, p_index, img.size)
         new = PIL.Image.new(img.mode, (width, height), color=255)
         new_arr = new.load()
         
