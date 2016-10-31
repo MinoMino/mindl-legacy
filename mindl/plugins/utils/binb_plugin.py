@@ -48,12 +48,12 @@ class BinBPlugin(ThreadedDownloaderPlugin):
     extract_metadata = ["Authors", "Publisher", "PublisherRuby", "Title", "TitleRuby",
         "Categories", "Publisher", "PublisherRuby", "Abstract"]
 
-    def __init__(self, bib, cid, login=True):
+    def __init__(self, bib, cid, login=True, **kwargs):
         # A dictionary with info we can use for naming and to include in the zipped file if desired.
         self.metadata = {}
 
         self._cid = cid
-        self.binb = binbapi.BinBApi(bib, self._cid, logger=self.logger)
+        self.binb = binbapi.BinBApi(bib, self._cid, logger=self.logger, **kwargs)
 
         if login:
             self.login(self.binb.session)
