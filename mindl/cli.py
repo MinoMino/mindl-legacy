@@ -72,7 +72,6 @@ def configure_parser():
         if len(split) == 1:
             logger = logging.getLogger("mindl")
             logger.critical("The key-value pair '{}' is not in the right format. Please use 'key=value'.".format(text))
-            return ""
             sys.exit(1)
 
         key, value = split
