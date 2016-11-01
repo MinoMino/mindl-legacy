@@ -22,15 +22,16 @@ import sys
 import os
 
 from .base_plugin import BasePlugin
+from .progress_bar import LineReservePrinter, ProgressBar
 
 class DownloadManager():
     base_directory = "downloads"
     
-    def __init__(self, plugin, report_count=10):
+    def __init__(self, plugin):
         self.logger = logging.getLogger("mindl")
         self._plugin = plugin
         self._count = 0
-        self._reports = [False for i in range(report_count)]
+        self._progress_bar = None
 
     def start_download(self):
         if not self._plugin.has_valid_options():
@@ -39,38 +40,37 @@ class DownloadManager():
 
         self.logger.info("Starting download...")
         try:
-            for dl in self._plugin.downloader():
-                # We get the file before we create directories. This allows the generator
-                # to get necessary info about what we're downloading before having to decide
-                # on what to name the directory.
-                filename, data = dl
+            with LineReservePrinter(sys.stdout) as lrp:
+                for dl in self._plugin.downloader():
+                    # We get the file before we create directories. This allows the generator
+                    # to get necessary info about what we're downloading before having to decide
+                    # on what to name the directory.
+                    filename, data = dl
 
-                # We allow the plugin to change directories in between files.
-                path = os.path.join(self.base_directory, self._plugin.directory())
+                    # We allow the plugin to change directories in between files.
+                    path = os.path.join(self.base_directory, self._plugin.directory())
 
-                if not os.path.isdir(path):
-                    self.logger.info("Creating non-existent directory '{}'.".format(path))
-                    os.makedirs(path)
+                    if not os.path.isdir(path):
+                        self.logger.info("Creating non-existent directory '{}'.".format(path))
+                        os.makedirs(path)
 
-                with open(os.path.join(path, filename), "wb") as f:
-                    f.write(data)
-                
-                # If the report_count is 0, don't report at all.
-                if self._reports:
+                    with open(os.path.join(path, filename), "wb") as f:
+                        f.write(data)
+
                     self._count += 1
+                    
                     progress = self._plugin.progress()
-                    if not progress:
-                        if self._count % 20 == 0:
-                            self.logger.info("{} files have been downloaded so far...".format(self._count))
+                    if self._progress_bar is None:
+                        if progress:
+                            current, total = progress
+                            self._progress_bar = ProgressBar(total=total,
+                                units="files", singular="file")
                         else:
-                            self.logger.debug("Got '{}'...".format(filename))
-                    else:
-                        current, total = progress
-                        percent = (current/total) * 100
-                        report_index = round(percent) // len(self._reports)
-                        if report_index < len(self._reports) and not self._reports[report_index]:
-                            self._reports[report_index] = True
-                            self.logger.info("{}% done ({}/{}).".format(round(percent, 2), current, total))
+                            self._progress_bar = ProgressBar(units="files", singular="file")
+
+                    self._progress_bar.update(1)
+                    lrp.line = self._progress_bar.get("Last: " + filename)
+                    lrp.flush()
         except Exception as e:
             self.logger.critical("An uncaught exception was raised while downloading.")
             if self._plugin.handle_exception(e) is True:
