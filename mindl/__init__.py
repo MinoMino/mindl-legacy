@@ -20,7 +20,7 @@ from .base_plugin import BasePlugin, Option
 from .plugin_manager import PluginManager
 from .download_manager import DownloadManager
 
-__version__ = "0.1"
+__version__ = "0.3"
 
 def download_directory():
     return DownloadManager.base_directory
