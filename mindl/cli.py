@@ -22,6 +22,7 @@ import sys
 
 from .download_manager import DownloadManager
 from .plugin_manager import PluginManager
+from .progress_bar import StdoutStreamHandler
 
 from collections import namedtuple
 
@@ -58,7 +59,7 @@ def init_logger(debug=False):
 
     # Console
     console_fmt = logging.Formatter("(%(asctime)s %(levelname)s) %(message)s", "%H:%M")
-    console_handler = logging.StreamHandler()
+    console_handler = StdoutStreamHandler()
     console_handler.setLevel(logging.DEBUG if debug else logging.INFO)
     console_handler.setFormatter(console_fmt)
     logger.addHandler(console_handler)

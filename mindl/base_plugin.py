@@ -20,6 +20,8 @@ import logging
 import datetime
 import sys
 
+from .progress_bar import StdoutStreamHandler
+
 # If an option key starts with this, make it a required option.
 REQUIRED_MAGIC = "@"
 
@@ -154,7 +156,7 @@ class BasePlugin():
 
                 # Console
                 console_fmt = logging.Formatter("(%(asctime)s %(levelname)s) [%(name)s] %(message)s", "%H:%M")
-                console_handler = logging.StreamHandler()
+                console_handler = StdoutStreamHandler()
                 console_handler.setLevel(logging.DEBUG if self._debug_logger else logging.INFO)
                 console_handler.setFormatter(console_fmt)
                 logger.addHandler(console_handler)
