@@ -18,20 +18,28 @@
 
 import random
 import hashlib
+import os
 
 from time import sleep
 from re import match
-from mindl import BasePlugin
+from mindl import BasePlugin, download_directory
 
 __version__ = "0.1"
 
 class dummy(BasePlugin):
+    """Simulates downloads by creating random data and sleeping in between files. Useful for testing stuff."""
     name = "Dummy"
-    options = ( ("n", 10),
-                ("length", 1) )
+    options = ( ("n", 20),
+                ("length", 0.75),
+                ("cleanup", 1),
+                ("progress", 1) )
 
     def __init__(self, url):
         self.count = 0
+
+    def progress(self):
+        if bool(int(self["progress"])):
+            return self.count, int(self["n"])
 
     @staticmethod
     def can_handle(url):
@@ -42,11 +50,21 @@ class dummy(BasePlugin):
 
     def downloader(self):
         while self.count < int(self["n"]):
-            sleep(int(self["length"]))
+            sleep(float(self["length"]))
             self.count += 1
             data = hashlib.sha224(bytes([random.randint(0,255) for i in range(24)])).hexdigest()
             while random.randint(0, 9):
                 data += hashlib.sha224(bytes([random.randint(0,255) for i in range(24)])).hexdigest()
             
+            if not self.count % 5:
+                self.logger.debug("順調に進んでるぞ～")
+            if not self.count % 13:
+                self.logger.error("大変！エラーが発生したよ！\nなんとかしてくれよ～")
+            
             yield "{}.txt".format(self.count), data.encode()
 
+    def finalize(self):
+        if bool(int(self["cleanup"])):
+            from shutil import rmtree
+            self.logger.info("Cleaning up dummy files...")
+            rmtree(os.path.join(download_directory(), self.directory()))
