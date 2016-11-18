@@ -1,9 +1,12 @@
 # mindl
-A plugin-based downloading tool. It was written with Python 3.5+ in mind, so while it's likely that at least 3.4 works,
-it's possible I've used new stuff that could potentially make it incompatible.
+A plugin-based downloading tool for Python 3.5 and above.
 
-It was written for the purpose of downloading e-books from sites that use HTML5 readers, which is
-why some plugins require Selenium and PhantomJS. The framework can however obviously be used for anything.
+**NOTE**: I'm currently in the process of rewriting this in Go. Check the [wiki](https://github.com/MinoMino/mindl/wiki)
+for the reasoning. Once the rewrite is in a decent state, it will replace the content here. This version will be moved
+to a new repository called "mindl-legacy" or something along those lines.
+
+It was written primarily for the purpose of downloading e-books from sites that use HTML5 readers, which is
+why some plugins require Selenium and PhantomJS, but it is not limited to that.
 
 If you've got some other HTML5 reader you want supported and you can provide a sample, I will consider writing a plugin for it.
 Open an issue here or send me an e-mail about it. I cannot promise a plugin that downloads from their API if the images are
