@@ -1,9 +1,7 @@
+**This is legacy code. mindl was [rewritten completely in Go](https://github.com/MinoMino/mindl).**
+
 # mindl
 A plugin-based downloading tool for Python 3.5 and above.
-
-**NOTE**: I'm currently in the process of rewriting this in Go. Check the [wiki](https://github.com/MinoMino/mindl/wiki)
-for the reasoning. Once the rewrite is in a decent state, it will replace the content here. This version will be moved
-to a new repository called "mindl-legacy" or something along those lines.
 
 It was written primarily for the purpose of downloading e-books from sites that use HTML5 readers, which is
 why some plugins require Selenium and PhantomJS, but it is not limited to that.
